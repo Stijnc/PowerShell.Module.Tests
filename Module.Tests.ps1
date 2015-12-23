@@ -14,6 +14,8 @@ Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'ModuleHelper.psm1
 $ErrorActionPreference = 'stop'
 Set-StrictMode -Version latest
 
+$RepoRoot = (Resolve-Path $PSScriptRoot\..).Path
+$module = Split-Path -Leaf $RepoRoot
 $psVersion = $PSVersionTable.PSVersion
 
 #region PSScriptanalyzer
@@ -45,7 +47,7 @@ else
 
 Describe 'Text files formatting' {
 
-    $allTextFiles = Get-TextFilesList $parent
+    $allTextFiles = Get-TextFilesList $RepoRoot
 
     Context 'Files encoding' {
 
@@ -86,7 +88,7 @@ Describe "Module: $module" -Tags Unit {
             # Using ErrorAction SilentlyContinue not to cause it to fail due to parse errors caused by unresolved resources.
             # Many of our examples try to import different modules which may not be present on the machine and PSScriptAnalyzer throws parse exceptions even though examples are valid.
             # Errors will still be returned as expected.
-            $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $parent -Severity Error -Recurse -ErrorAction SilentlyContinue
+            $PSScriptAnalyzerErrors = Invoke-ScriptAnalyzer -path $RepoRoot -Severity Error -Recurse -ErrorAction SilentlyContinue
             if ($PSScriptAnalyzerErrors -ne $null) {
                 Write-Error "There are PSScriptAnalyzer errors that need to be fixed:`n $PSScriptAnalyzerErrors"
                 Write-Error "For instructions on how to run PSScriptAnalyzer on your own machine, please go to https://github.com/powershell/psscriptAnalyzer/"
@@ -100,12 +102,12 @@ Describe "Module: $module" -Tags Unit {
         
         It "Has a root module file ($module.psm1)" {        
             
-            "$parent\$module.psm1" | Should Exist
+            "$RepoRoot\$module.psm1" | Should Exist
         }
 
         It "Is valid Powershell (Has no script errors)" {
 
-            $contents = Get-Content -Path "$parent\$module.psm1" -ErrorAction SilentlyContinue
+            $contents = Get-Content -Path "$RepoRoot\$module.psm1" -ErrorAction SilentlyContinue
             $errors = $null
             $null = [System.Management.Automation.PSParser]::Tokenize($contents, [ref]$errors)
             $errors.Count | Should Be 0
@@ -113,17 +115,17 @@ Describe "Module: $module" -Tags Unit {
 
         It "Has a manifest file ($module.psd1)" {
             
-            "$parent\$module.psd1" | Should Exist
+            "$RepoRoot\$module.psd1" | Should Exist
         }
 
         It "Contains a root module path in the manifest (RootModule = '.\$module.psm1')" {
             
-            "$parent\$module.psd1" | Should Exist
-            "$parent\$module.psd1" | Should Contain "\.\\$module.psm1"
+            "$RepoRoot\$module.psd1" | Should Exist
+            "$RepoRoot\$module.psd1" | Should Contain "\.\\$module.psm1"
         }
         
         It "Is valid Powershell (Has no script errors)" {
-            $contents = Get-Content -Path "$parent\$module.psm1" -ErrorAction Stop
+            $contents = Get-Content -Path "$RepoRoot\$module.psm1" -ErrorAction Stop
             $errors = $null
             $null = [System.Management.Automation.PSParser]::Tokenize($contents, [ref]$errors)
             $errors.Count | Should Be 0
@@ -133,13 +135,13 @@ Describe "Module: $module" -Tags Unit {
 #region module content
     Context 'Module loads and Functions exist' {
         
-        $manifest = Test-ModuleManifest -Path "$parent\$module.psd1"
+        $manifest = Test-ModuleManifest -Path "$RepoRoot\$module.psd1"
         $ExportedCommands = $manifest.ExportedCommands
         $ModuleName = $manifest.Name
         
         BeforeEach {
             if (get-module $Module) {remove-module $Module}
-            import-Module "$parent\$module.psd1" -ErrorAction SilentlyContinue
+            import-Module "$RepoRoot\$module.psd1" -ErrorAction SilentlyContinue
             $loadedModule = Get-Module $module -ErrorAction SilentlyContinue    
             $loadedFunctions = $loadedModule.ExportedCommands.Keys
             
@@ -166,7 +168,7 @@ Describe "Module: $module" -Tags Unit {
         
         BeforeAll {
             if (get-module $Module) {remove-module $Module}
-            import-Module "$parent\$module.psd1" -ErrorAction SilentlyContinue
+            import-Module "$RepoRoot\$module.psd1" -ErrorAction SilentlyContinue
             $loadedModule = Get-Module $module -ErrorAction SilentlyContinue    
             $loadedFunctions = $loadedModule.ExportedCommands.keys
         }

@@ -1,7 +1,7 @@
 # PowerShell Module test
 A bunch of generic tests and functions to validate PowerShell modules
 
-## Tests (in progress - Bold not yet implemented)
+## Tests (in progress)
 different test are catalogues in different 'Describe' and 'Context' sections
 
 ### Files
@@ -14,7 +14,7 @@ different test are catalogues in different 'Describe' and 'Context' sections
 * Is valid PowerShell
 * Contains a module manifest
 * Contains a root module in the manifest
-*  **Contains an author**
+*  **Contains an author (not implemented yet)**
 * Help: Non default synopsis is provided
 * Help: all exported functions have examples
 
